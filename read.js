@@ -186,15 +186,16 @@ export function addReadMethods(LMDBStore, {
 				let flags = (includeValues ? 0x100 : 0) | (reverse ? 0x400 : 0) |
 					(valuesForKey ? 0x800 : 0) | (options.exactMatch ? 0x4000 : 0);
 				function resetCursor() {
+					if (cursor)
+						finishCursor();
+					let writeTxn = env.writeTxn;
+					if (writeTxn)
+						snapshot = false;
+					txn = writeTxn || (readTxnRenewed ? readTxn : renewReadTxn());
+					cursor = !writeTxn && db.availableCursor;
 					try {
-						if (cursor)
-							finishCursor();
-						let writeTxn = env.writeTxn;
-						if (writeTxn)
-							snapshot = false;
-						txn = writeTxn || (readTxnRenewed ? readTxn : renewReadTxn());
-						cursor = !writeTxn && db.availableCursor;
 						if (cursor) {
+							console.log('has cursor');
 							db.availableCursor = null;
 							if (db.cursorTxn != txn) {
 								let rc = cursor.renew();
@@ -203,6 +204,7 @@ export function addReadMethods(LMDBStore, {
 							} else// if (db.currentRenewId != renewId)
 								flags |= 0x2000;
 						} else {
+							console.log('new Cursor');
 							cursor = new Cursor(db);
 						}
 						txn.cursorCount = (txn.cursorCount || 0) + 1; // track transaction so we always use the same one
@@ -213,6 +215,7 @@ export function addReadMethods(LMDBStore, {
 					} catch(error) {
 						if (cursor) {
 							try {
+								console.error(error);
 								cursor.close();
 							} catch(error) { }
 						}
@@ -258,6 +261,7 @@ export function addReadMethods(LMDBStore, {
 				}
 
 				function finishCursor() {
+					console.log('finishCursor', txn.isDone)
 					if (txn.isDone)
 						return;
 					if (cursorRenewId)
