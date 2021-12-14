@@ -791,12 +791,9 @@ describe('lmdb-js', function() {
         } else {
           db.childTransaction(() => {
             iterator = db.getRange({ start: 'c1' })[Symbol.iterator]();
-            console.log('a');
             should.equal(iterator.next().value.value, 'value1');
-            console.log('b');
           });
         }
-        console.log('c');
         should.equal(iterator.next().value.value, 'value2');
         console.log('d');
       });
