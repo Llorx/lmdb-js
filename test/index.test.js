@@ -778,7 +778,7 @@ describe('lmdb-js', function() {
         should.equal(db.get('key1'), 'test');
       }
     });
-    it('handle write transaction with hanging cursors', async function() {
+    it.only('handle write transaction with hanging cursors', async function() {
       db.put('c1', 'value1');
       db.put('c2', 'value2');
       db.put('c3', 'value3');
@@ -791,18 +791,12 @@ describe('lmdb-js', function() {
         } else {
           db.childTransaction(() => {
             iterator = db.getRange({ start: 'c1' })[Symbol.iterator]();
-            console.log('a');
             should.equal(iterator.next().value.value, 'value1');
-            console.log('b');
           });
         }
-        console.log('c');
         should.equal(iterator.next().value.value, 'value2');
-        console.log('d');
       });
-      console.log('e');
       should.equal(iterator.next().value.value, 'value3');
-      console.log('f');
     });
     it('mixed batches', async function() {
       let promise

@@ -195,7 +195,6 @@ export function addReadMethods(LMDBStore, {
 					cursor = !writeTxn && db.availableCursor;
 					try {
 						if (cursor) {
-							console.log('has cursor');
 							db.availableCursor = null;
 							if (db.cursorTxn != txn) {
 								let rc = cursor.renew();
@@ -204,7 +203,6 @@ export function addReadMethods(LMDBStore, {
 							} else// if (db.currentRenewId != renewId)
 								flags |= 0x2000;
 						} else {
-							console.log('new Cursor');
 							cursor = new Cursor(db);
 						}
 						txn.cursorCount = (txn.cursorCount || 0) + 1; // track transaction so we always use the same one
@@ -261,7 +259,6 @@ export function addReadMethods(LMDBStore, {
 				}
 
 				function finishCursor() {
-					console.log('finishCursor', txn.isDone)
 					if (txn.isDone)
 						return;
 					if (cursorRenewId)
@@ -282,7 +279,7 @@ export function addReadMethods(LMDBStore, {
 				return {
 					next() {
 						let keySize, lastSize;
-						if (cursorRenewId && cursorRenewId != renewId) {
+						if (cursorRenewId && (cursorRenewId != renewId || txn.isDone)) {
 							resetCursor();
 							keySize = position(0);
 						}
